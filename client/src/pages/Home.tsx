@@ -39,13 +39,10 @@ const Home = () => {
         const targetElement = document.querySelector(targetId);
         
         if (targetElement) {
-          gsap.to(window, {
-            duration: 1,
-            scrollTo: {
-              y: targetElement,
-              offsetY: 80
-            },
-            ease: "power2.inOut"
+          // Fixed scrollTo implementation
+          window.scrollTo({
+            top: targetElement.getBoundingClientRect().top + window.scrollY - 80,
+            behavior: 'smooth'
           });
         }
       });
@@ -59,7 +56,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div ref={homeRef} className="min-h-screen bg-gray-50">
+    <div ref={homeRef} className="min-h-screen bg-background">
       <CustomCursor />
       <Navbar />
       <HeroSection />

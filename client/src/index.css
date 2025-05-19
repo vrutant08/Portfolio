@@ -1,52 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap');
-
 :root {
-  --background: 0 0% 100%;
-  --foreground: 20 14.3% 4.1%;
-  --muted: 60 4.8% 95.9%;
-  --muted-foreground: 25 5.3% 44.7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 14.3% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 20 14.3% 4.1%;
-  --border: 20 5.9% 90%;
-  --input: 20 5.9% 90%;
-  --primary: 210 100% 40%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 0 0% 100%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 210 100% 40%;
-  --accent-foreground: 0 0% 0%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 210 100% 40%;
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 70%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 98%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 98%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --primary: 0 70% 45%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 0 70% 45%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 0 70% 45%;
   --radius: 0.5rem;
-}
-
-.dark {
-  --background: 20 14.3% 4.1%;
-  --foreground: 60 9.1% 97.8%;
-  --muted: 12 6.5% 15.1%;
-  --muted-foreground: 24 5.4% 63.9%;
-  --popover: 20 14.3% 4.1%;
-  --popover-foreground: 60 9.1% 97.8%;
-  --card: 20 14.3% 4.1%;
-  --card-foreground: 60 9.1% 97.8%;
-  --border: 12 6.5% 15.1%;
-  --input: 12 6.5% 15.1%;
-  --primary: 210 100% 40%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 12 6.5% 15.1%;
-  --secondary-foreground: 60 9.1% 97.8%;
-  --accent: 210 100% 40%;
-  --accent-foreground: 60 9.1% 97.8%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 85.7% 97.3%;
-  --ring: 210 100% 40%;
 }
 
 @layer base {
@@ -109,17 +87,37 @@
   transform: translateY(0);
 }
 
-.skill-bar {
-  height: 6px;
-  @apply bg-gray-200 rounded-full overflow-hidden;
+/* Skill tags - replacing skill bars */
+.skill-tag {
+  @apply bg-muted text-foreground py-2 px-4 rounded-md font-medium inline-block;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.skill-progress {
+.skill-tag:hover {
+  @apply bg-primary text-primary-foreground;
+  transform: translateY(-3px);
+}
+
+.skill-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
-  @apply bg-primary rounded-full;
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 1.5s ease;
+  background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.skill-tag:hover::before {
+  transform: translateX(100%);
+}
+
+.skill-category {
+  @apply text-primary font-semibold text-lg mb-4 border-b border-primary/30 pb-2;
 }
 
 .typewriter-cursor {
@@ -155,10 +153,25 @@
 }
 
 .project-card {
-  @apply transition-all duration-300;
+  @apply bg-card border border-border transition-all duration-300;
 }
 
 .project-card:hover {
   transform: translateY(-5px);
-  @apply shadow-lg;
+  @apply border-primary/50 shadow-lg shadow-primary/10;
+}
+
+.section-heading {
+  @apply text-3xl md:text-4xl font-bold relative;
+  display: inline-block;
+}
+
+.section-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  @apply bg-primary;
 }

@@ -1,133 +1,111 @@
 import { useEffect, useRef } from 'react';
 
 const InvertedCursor = () => {
-  const rippleArrayRef = useRef<any[]>([]);
-
+  const trailPointsRef = useRef<Array<{x: number, y: number, age: number}>>([]);
+  const isMouseDownRef = useRef(false);
+  
   useEffect(() => {
-    // Create all DOM elements we need
+    // Create cursor elements
     const cursor = document.createElement('div');
-    const inverter = document.createElement('div');
     const canvas = document.createElement('canvas');
     
-    // Setup canvas for ripple effect
-    canvas.id = 'ripple-canvas';
+    // Setup cursor
+    cursor.id = 'cursor';
+    cursor.style.position = 'fixed';
+    cursor.style.width = '15px';
+    cursor.style.height = '15px';
+    cursor.style.borderRadius = '50%';
+    cursor.style.backgroundColor = 'hsla(var(--primary), 0.8)';
+    cursor.style.pointerEvents = 'none';
+    cursor.style.zIndex = '9999';
+    cursor.style.transform = 'translate(-50%, -50%)';
+    cursor.style.opacity = '1';
+    cursor.style.boxShadow = '0 0 10px hsla(var(--primary), 0.5)';
+    document.body.appendChild(cursor);
+    
+    // Set up canvas for trail
+    canvas.id = 'cursor-trail';
     canvas.style.position = 'fixed';
     canvas.style.top = '0';
     canvas.style.left = '0';
     canvas.style.width = '100vw';
     canvas.style.height = '100vh';
     canvas.style.pointerEvents = 'none';
-    canvas.style.zIndex = '9995';
+    canvas.style.zIndex = '9998';
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
-    // Setup cursor ring
-    cursor.id = 'cursor-ring';
-    cursor.style.position = 'fixed';
-    cursor.style.width = '30px';
-    cursor.style.height = '30px';
-    cursor.style.borderRadius = '50%';
-    cursor.style.border = '2px solid white';
-    cursor.style.pointerEvents = 'none';
-    cursor.style.zIndex = '9999';
-    cursor.style.transform = 'translate(-50%, -50%)';
-    cursor.style.opacity = '0.7';
-    cursor.style.transition = 'width 0.2s ease, height 0.2s ease, border-color 0.2s ease';
-    
-    // Setup inverter
-    inverter.id = 'cursor-inverter';
-    inverter.style.position = 'fixed';
-    inverter.style.width = '40px';
-    inverter.style.height = '40px';
-    inverter.style.borderRadius = '50%';
-    inverter.style.backgroundColor = 'white';
-    inverter.style.mixBlendMode = 'difference';
-    inverter.style.pointerEvents = 'none';
-    inverter.style.zIndex = '9998';
-    inverter.style.transform = 'translate(-50%, -50%)';
-    inverter.style.opacity = '0';
-    inverter.style.transition = 'opacity 0.2s ease';
-    
-    // Add elements to DOM
     document.body.appendChild(canvas);
-    document.body.appendChild(cursor);
-    document.body.appendChild(inverter);
     
-    // Setup ripple rendering
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Set up animation
+    let lastX = -100, lastY = -100;
+    let lastTimestamp = 0;
     
-    // Ripple class definition
-    class Ripple {
-      x: number;
-      y: number;
-      radius: number;
-      maxRadius: number;
-      opacity: number;
-      color: string;
-      lineWidth: number;
-      speed: number;
-
-      constructor(x: number, y: number, color: string = 'rgba(255, 0, 0, 0.3)', size: number = 1) {
-        this.x = x;
-        this.y = y;
-        this.radius = 5 * size;
-        this.maxRadius = Math.random() * 100 + 80; // Larger max size
-        this.opacity = 0.8;
-        this.color = color;
-        this.lineWidth = Math.max(1, 5 * size); // Thicker lines for larger ripples
-        this.speed = 2 + Math.random() * 2; // Random speed for more natural effect
-      }
-
-      update() {
-        if (this.radius < this.maxRadius) {
-          this.radius += this.speed;
-          this.opacity -= 0.003;
-          return true;
-        }
-        return false;
-      }
-
-      draw(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = this.color;
-        ctx.globalAlpha = this.opacity;
-        ctx.lineWidth = this.lineWidth;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-    }
-    
-    // Animation loop
-    function animateRipples() {
+    // Draw trail function
+    function drawTrail() {
+      if (!ctx) return;
+      
+      // Clear the canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Update and draw ripples
-      rippleArrayRef.current = rippleArrayRef.current.filter(ripple => {
-        ripple.draw(ctx);
-        return ripple.update();
-      });
+      // Decay trail points over time
+      const currentTime = Date.now();
+      trailPointsRef.current = trailPointsRef.current
+        .map(point => ({ ...point, age: point.age + 16 }))
+        .filter(point => point.age < 1000); // Remove points older than 1 second
       
-      requestAnimationFrame(animateRipples);
+      // Draw trail if there are points
+      if (trailPointsRef.current.length > 1) {
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Draw each segment of the trail
+        for (let i = 1; i < trailPointsRef.current.length; i++) {
+          const point = trailPointsRef.current[i];
+          const prevPoint = trailPointsRef.current[i - 1];
+          
+          // Calculate opacity based on age
+          const opacity = Math.max(0, 1 - point.age / 1000);
+          
+          // Set up gradient between points
+          const gradient = ctx.createLinearGradient(
+            prevPoint.x, prevPoint.y, point.x, point.y
+          );
+          
+          // Different gradients for different effects
+          if (isMouseDownRef.current) {
+            // Red gradient for click-and-drag
+            gradient.addColorStop(0, `rgba(255, 0, 0, ${opacity * 0.8})`);
+            gradient.addColorStop(1, `rgba(180, 0, 0, ${opacity * 0.6})`);
+          } else {
+            // Red-orange gradient for regular trail
+            gradient.addColorStop(0, `rgba(255, 30, 30, ${opacity * 0.6})`);
+            gradient.addColorStop(1, `rgba(220, 30, 30, ${opacity * 0.4})`);
+          }
+          
+          // Draw the line segment
+          ctx.beginPath();
+          ctx.strokeStyle = gradient;
+          
+          // Thinner lines for normal movement, thicker for click-and-drag
+          ctx.lineWidth = isMouseDownRef.current ? 6 : 3;
+          
+          ctx.moveTo(prevPoint.x, prevPoint.y);
+          ctx.lineTo(point.x, point.y);
+          ctx.stroke();
+        }
+      }
+      
+      // Request next frame
+      requestAnimationFrame(drawTrail);
     }
     
     // Start animation
-    animateRipples();
+    drawTrail();
     
-    // Function to create ripples
-    function createRipple(x: number, y: number, isOverImage: boolean = false, size: number = 1) {
-      const color = isOverImage 
-        ? 'rgba(255, 0, 0, 0.3)' // Red for images
-        : 'rgba(255, 255, 255, 0.2)'; // White for other elements
-      
-      rippleArrayRef.current.push(new Ripple(x, y, color, size));
-    }
-    
-    // Track mouse movement
+    // Handle mouse movement
     function handleMouseMove(e: MouseEvent) {
       const { clientX, clientY } = e;
       
@@ -135,36 +113,36 @@ const InvertedCursor = () => {
       cursor.style.left = `${clientX}px`;
       cursor.style.top = `${clientY}px`;
       
-      // Check if over an image
-      const element = document.elementFromPoint(clientX, clientY);
-      const isOverImg = element?.tagName === 'IMG' || element?.closest('img') !== null;
+      // Add trail point if mouse has moved enough or if mouse is down
+      const distance = Math.hypot(clientX - lastX, clientY - lastY);
+      const currentTime = Date.now();
+      const timeDiff = currentTime - lastTimestamp;
       
-      if (isOverImg) {
-        // Make inverter visible over images
-        inverter.style.left = `${clientX}px`;
-        inverter.style.top = `${clientY}px`;
-        inverter.style.opacity = '1';
-        
-        // Modify cursor appearance
-        cursor.style.width = '50px';
-        cursor.style.height = '50px';
-        cursor.style.borderColor = 'red';
-        
-        // Create ripples over images
-        createRipple(clientX, clientY, true);
-      } else {
-        // Hide inverter when not over images
-        inverter.style.opacity = '0';
-        
-        // Restore cursor appearance
-        cursor.style.width = '30px';
-        cursor.style.height = '30px';
-        cursor.style.borderColor = 'white';
-        
-        // Occasionally create ripples during general movement
-        if (Math.random() < 0.03) {
-          createRipple(clientX, clientY, false, 0.5);
+      if (distance > 5 || isMouseDownRef.current) {
+        if (timeDiff > (isMouseDownRef.current ? 5 : 20)) { // More points when dragging
+          trailPointsRef.current.push({ x: clientX, y: clientY, age: 0 });
+          lastX = clientX;
+          lastY = clientY;
+          lastTimestamp = currentTime;
         }
+      }
+      
+      // Adapt cursor appearance based on what's under it
+      const element = document.elementFromPoint(clientX, clientY);
+      if (
+        element?.tagName === 'BUTTON' || 
+        element?.tagName === 'A' || 
+        element?.classList.contains('hero-button') ||
+        element?.closest('button') || 
+        element?.closest('a')
+      ) {
+        cursor.style.width = '20px';
+        cursor.style.height = '20px';
+        cursor.style.backgroundColor = 'hsla(var(--primary), 1)';
+      } else {
+        cursor.style.width = '15px';
+        cursor.style.height = '15px';
+        cursor.style.backgroundColor = 'hsla(var(--primary), 0.8)';
       }
     }
     
@@ -175,35 +153,42 @@ const InvertedCursor = () => {
     
     function handleMouseLeave() {
       cursor.style.opacity = '0';
-      inverter.style.opacity = '0';
     }
     
-    // Handle interactive elements
-    function handleElementMouseOver(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'BUTTON' || 
-        target.tagName === 'A' || 
-        target.classList.contains('hero-button') ||
-        target.closest('button') || 
-        target.closest('a')
-      ) {
-        cursor.style.width = '40px';
-        cursor.style.height = '40px';
-        
-        // Create ripples
-        createRipple(e.clientX, e.clientY);
-        setTimeout(() => createRipple(e.clientX + 10, e.clientY - 10), 100);
+    // Handle mouse click
+    function handleMouseDown(e: MouseEvent) {
+      isMouseDownRef.current = true;
+      
+      // Create burst of points for click effect
+      const { clientX, clientY } = e;
+      
+      // Clear existing trail and add fresh burst
+      trailPointsRef.current = [];
+      
+      // Add burst effect - multiple points in a circle
+      const burstRadius = 20;
+      const numPoints = 8;
+      for (let i = 0; i < numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const x = clientX + Math.cos(angle) * burstRadius;
+        const y = clientY + Math.sin(angle) * burstRadius;
+        trailPointsRef.current.push({ x, y, age: 0 });
       }
+      
+      // Add center point
+      trailPointsRef.current.push({ x: clientX, y: clientY, age: 0 });
+      
+      cursor.style.width = '25px';
+      cursor.style.height = '25px';
+      cursor.style.backgroundColor = 'hsla(var(--primary), 1)';
     }
     
-    // Handle clicks
-    function handleMouseClick(e: MouseEvent) {
-      // Create multiple ripples for dramatic effect
-      createRipple(e.clientX, e.clientY, false, 2);
-      setTimeout(() => createRipple(e.clientX - 10, e.clientY + 10, false, 1.5), 50);
-      setTimeout(() => createRipple(e.clientX + 15, e.clientY - 5, false, 1.2), 100);
-      setTimeout(() => createRipple(e.clientX, e.clientY, false, 1.8), 150);
+    function handleMouseUp() {
+      isMouseDownRef.current = false;
+      
+      cursor.style.width = '15px';
+      cursor.style.height = '15px';
+      cursor.style.backgroundColor = 'hsla(var(--primary), 0.8)';
     }
     
     // Handle window resize
@@ -212,43 +197,51 @@ const InvertedCursor = () => {
       canvas.height = window.innerHeight;
     }
     
-    // Check if device supports touch
+    // Check for touch device
     const isTouchDevice = 'ontouchstart' in window || 
                         navigator.maxTouchPoints > 0 || 
                         (navigator as any).msMaxTouchPoints > 0;
     
-    // Only add cursor effects on non-touch devices
+    // Only add effects on non-touch devices
     if (!isTouchDevice) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseenter', handleMouseEnter);
       document.addEventListener('mouseleave', handleMouseLeave);
-      document.addEventListener('click', handleMouseClick);
-      document.addEventListener('mouseover', handleElementMouseOver);
+      document.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mouseup', handleMouseUp);
       window.addEventListener('resize', handleResize);
+      
+      // Hide default cursor
+      document.body.style.cursor = 'none';
+      
+      // Add cursor visibility to clickable elements
+      const styleTag = document.createElement('style');
+      styleTag.innerHTML = `
+        a:hover, button:hover, .hero-button:hover { 
+          cursor: none !important;
+        }
+      `;
+      document.head.appendChild(styleTag);
     }
     
-    // Cleanup function
+    // Cleanup
     return () => {
-      // Remove DOM elements
       if (document.body.contains(cursor)) {
         document.body.removeChild(cursor);
-      }
-      
-      if (document.body.contains(inverter)) {
-        document.body.removeChild(inverter);
       }
       
       if (document.body.contains(canvas)) {
         document.body.removeChild(canvas);
       }
       
-      // Remove event listeners
+      document.body.style.cursor = '';
+      
       if (!isTouchDevice) {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseenter', handleMouseEnter);
         document.removeEventListener('mouseleave', handleMouseLeave);
-        document.removeEventListener('click', handleMouseClick);
-        document.removeEventListener('mouseover', handleElementMouseOver);
+        document.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('mouseup', handleMouseUp);
         window.removeEventListener('resize', handleResize);
       }
     };

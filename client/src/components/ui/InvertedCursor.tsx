@@ -1,162 +1,185 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 const InvertedCursor = () => {
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const rippleRef = useRef<HTMLDivElement>(null);
+  const rippleArrayRef = useRef<any[]>([]);
 
   useEffect(() => {
-    // Function to create and add the custom cursor to the DOM
-    const setupCustomCursor = () => {
-      // Create main inverted cursor element
-      const cursorElement = document.createElement('div');
-      cursorElement.id = 'inverted-cursor';
-      cursorElement.style.position = 'fixed';
-      cursorElement.style.width = '24px';
-      cursorElement.style.height = '24px';
-      cursorElement.style.borderRadius = '50%';
-      cursorElement.style.pointerEvents = 'none';
-      cursorElement.style.zIndex = '9999';
-      cursorElement.style.mixBlendMode = 'difference';
-      cursorElement.style.backgroundColor = 'white';
-      cursorElement.style.transform = 'translate(-50%, -50%)';
-      cursorElement.style.opacity = '0';
-      cursorElement.style.transition = 'width 0.3s, height 0.3s, opacity 0.3s';
-      
-      // Append to body
-      document.body.appendChild(cursorElement);
-      
-      // Store reference
-      if (cursorRef) cursorRef.current = cursorElement;
-      
-      // Create dot cursor for regular use
-      const dotElement = document.createElement('div');
-      dotElement.id = 'cursor-dot';
-      dotElement.style.position = 'fixed';
-      dotElement.style.width = '8px';
-      dotElement.style.height = '8px';
-      dotElement.style.borderRadius = '50%';
-      dotElement.style.backgroundColor = 'hsl(var(--primary))';
-      dotElement.style.opacity = '0.7';
-      dotElement.style.pointerEvents = 'none';
-      dotElement.style.zIndex = '9998';
-      dotElement.style.transform = 'translate(-50%, -50%)';
-      dotElement.style.transition = 'opacity 0.3s';
-      
-      // Append to body
-      document.body.appendChild(dotElement);
-      
-      // Store reference
-      if (rippleRef) rippleRef.current = dotElement;
-      
-      return {
-        cursor: cursorElement,
-        dot: dotElement
-      };
-    };
+    // Create all DOM elements we need
+    const cursor = document.createElement('div');
+    const inverter = document.createElement('div');
+    const canvas = document.createElement('canvas');
     
-    // Create ripple effect at cursor position
-    const createRipple = (x: number, y: number) => {
-      const ripple = document.createElement('div');
-      ripple.style.position = 'fixed';
-      ripple.style.top = `${y}px`;
-      ripple.style.left = `${x}px`;
-      ripple.style.width = '30px';
-      ripple.style.height = '30px';
-      ripple.style.borderRadius = '50%';
-      ripple.style.backgroundColor = 'hsla(var(--primary), 0.2)';
-      ripple.style.transform = 'translate(-50%, -50%) scale(0)';
-      ripple.style.pointerEvents = 'none';
-      ripple.style.zIndex = '9990';
-      document.body.appendChild(ripple);
-      
-      // Animate the ripple
-      const animation = ripple.animate(
-        [
-          { transform: 'translate(-50%, -50%) scale(0)', opacity: 0.8 },
-          { transform: 'translate(-50%, -50%) scale(3)', opacity: 0 }
-        ],
-        {
-          duration: 800,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+    // Setup canvas for ripple effect
+    canvas.id = 'ripple-canvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '9995';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Setup cursor ring
+    cursor.id = 'cursor-ring';
+    cursor.style.position = 'fixed';
+    cursor.style.width = '30px';
+    cursor.style.height = '30px';
+    cursor.style.borderRadius = '50%';
+    cursor.style.border = '2px solid white';
+    cursor.style.pointerEvents = 'none';
+    cursor.style.zIndex = '9999';
+    cursor.style.transform = 'translate(-50%, -50%)';
+    cursor.style.opacity = '0.7';
+    cursor.style.transition = 'width 0.2s ease, height 0.2s ease, border-color 0.2s ease';
+    
+    // Setup inverter
+    inverter.id = 'cursor-inverter';
+    inverter.style.position = 'fixed';
+    inverter.style.width = '40px';
+    inverter.style.height = '40px';
+    inverter.style.borderRadius = '50%';
+    inverter.style.backgroundColor = 'white';
+    inverter.style.mixBlendMode = 'difference';
+    inverter.style.pointerEvents = 'none';
+    inverter.style.zIndex = '9998';
+    inverter.style.transform = 'translate(-50%, -50%)';
+    inverter.style.opacity = '0';
+    inverter.style.transition = 'opacity 0.2s ease';
+    
+    // Add elements to DOM
+    document.body.appendChild(canvas);
+    document.body.appendChild(cursor);
+    document.body.appendChild(inverter);
+    
+    // Setup ripple rendering
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Ripple class definition
+    class Ripple {
+      x: number;
+      y: number;
+      radius: number;
+      maxRadius: number;
+      opacity: number;
+      color: string;
+      lineWidth: number;
+      speed: number;
+
+      constructor(x: number, y: number, color: string = 'rgba(255, 0, 0, 0.3)', size: number = 1) {
+        this.x = x;
+        this.y = y;
+        this.radius = 5 * size;
+        this.maxRadius = Math.random() * 100 + 80; // Larger max size
+        this.opacity = 0.8;
+        this.color = color;
+        this.lineWidth = Math.max(1, 5 * size); // Thicker lines for larger ripples
+        this.speed = 2 + Math.random() * 2; // Random speed for more natural effect
+      }
+
+      update() {
+        if (this.radius < this.maxRadius) {
+          this.radius += this.speed;
+          this.opacity -= 0.003;
+          return true;
         }
-      );
+        return false;
+      }
+
+      draw(ctx: CanvasRenderingContext2D) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = this.opacity;
+        ctx.lineWidth = this.lineWidth;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    
+    // Animation loop
+    function animateRipples() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Remove the ripple element when animation completes
-      animation.onfinish = () => {
-        if (ripple && ripple.parentNode) {
-          ripple.parentNode.removeChild(ripple);
-        }
-      };
-    };
+      // Update and draw ripples
+      rippleArrayRef.current = rippleArrayRef.current.filter(ripple => {
+        ripple.draw(ctx);
+        return ripple.update();
+      });
+      
+      requestAnimationFrame(animateRipples);
+    }
     
-    // Setup cursor elements
-    const { cursor, dot } = setupCustomCursor();
+    // Start animation
+    animateRipples();
     
-    // Function to handle mouse movement
-    const handleMouseMove = (e: MouseEvent) => {
+    // Function to create ripples
+    function createRipple(x: number, y: number, isOverImage: boolean = false, size: number = 1) {
+      const color = isOverImage 
+        ? 'rgba(255, 0, 0, 0.3)' // Red for images
+        : 'rgba(255, 255, 255, 0.2)'; // White for other elements
+      
+      rippleArrayRef.current.push(new Ripple(x, y, color, size));
+    }
+    
+    // Track mouse movement
+    function handleMouseMove(e: MouseEvent) {
       const { clientX, clientY } = e;
       
-      // Position both cursors
-      if (cursor) {
-        cursor.style.left = `${clientX}px`;
-        cursor.style.top = `${clientY}px`;
-      }
+      // Update cursor position
+      cursor.style.left = `${clientX}px`;
+      cursor.style.top = `${clientY}px`;
       
-      if (dot) {
-        dot.style.left = `${clientX}px`;
-        dot.style.top = `${clientY}px`;
-      }
-      
-      // Check if cursor is over an image
+      // Check if over an image
       const element = document.elementFromPoint(clientX, clientY);
-      const isOverImg = element?.tagName === 'IMG' || 
-                      element?.closest('img') !== null;
+      const isOverImg = element?.tagName === 'IMG' || element?.closest('img') !== null;
       
-      // Apply effects based on what we're hovering over
       if (isOverImg) {
-        // Larger inverted cursor over images
-        if (cursor) {
-          cursor.style.width = '40px';
-          cursor.style.height = '40px';
-          cursor.style.opacity = '1';
-        }
-        if (dot) {
-          dot.style.opacity = '0';
-        }
+        // Make inverter visible over images
+        inverter.style.left = `${clientX}px`;
+        inverter.style.top = `${clientY}px`;
+        inverter.style.opacity = '1';
         
-        // Create ripple effect when first moving over an image
-        const lastTarget = cursor.dataset.lastTarget || '';
-        if (lastTarget !== 'image') {
-          createRipple(clientX, clientY);
-          cursor.dataset.lastTarget = 'image';
-        }
+        // Modify cursor appearance
+        cursor.style.width = '50px';
+        cursor.style.height = '50px';
+        cursor.style.borderColor = 'red';
+        
+        // Create ripples over images
+        createRipple(clientX, clientY, true);
       } else {
-        // Regular cursor elsewhere
-        if (cursor) {
-          cursor.style.width = '24px';
-          cursor.style.height = '24px';
-          cursor.style.opacity = '0.3';
+        // Hide inverter when not over images
+        inverter.style.opacity = '0';
+        
+        // Restore cursor appearance
+        cursor.style.width = '30px';
+        cursor.style.height = '30px';
+        cursor.style.borderColor = 'white';
+        
+        // Occasionally create ripples during general movement
+        if (Math.random() < 0.03) {
+          createRipple(clientX, clientY, false, 0.5);
         }
-        if (dot) {
-          dot.style.opacity = '0.7';
-        }
-        cursor.dataset.lastTarget = '';
       }
-    };
+    }
     
-    // Handle mouse enter/leave
-    const handleMouseEnter = () => {
-      if (cursor) cursor.style.opacity = '0.3';
-      if (dot) dot.style.opacity = '0.7';
-    };
+    // Handle mouse events
+    function handleMouseEnter() {
+      cursor.style.opacity = '1';
+    }
     
-    const handleMouseLeave = () => {
-      if (cursor) cursor.style.opacity = '0';
-      if (dot) dot.style.opacity = '0';
-    };
+    function handleMouseLeave() {
+      cursor.style.opacity = '0';
+      inverter.style.opacity = '0';
+    }
     
-    // Apply effects on buttons, links, etc.
-    const handleElementMouseEnter = (e: MouseEvent) => {
+    // Handle interactive elements
+    function handleElementMouseOver(e: MouseEvent) {
       const target = e.target as HTMLElement;
       if (
         target.tagName === 'BUTTON' || 
@@ -165,52 +188,68 @@ const InvertedCursor = () => {
         target.closest('button') || 
         target.closest('a')
       ) {
-        if (cursor) {
-          cursor.style.width = '32px';
-          cursor.style.height = '32px';
-          cursor.style.opacity = '0.5';
-        }
+        cursor.style.width = '40px';
+        cursor.style.height = '40px';
         
-        // Create ripple
+        // Create ripples
         createRipple(e.clientX, e.clientY);
+        setTimeout(() => createRipple(e.clientX + 10, e.clientY - 10), 100);
       }
-    };
+    }
     
-    // Handle click effects
-    const handleMouseClick = (e: MouseEvent) => {
-      createRipple(e.clientX, e.clientY);
-    };
+    // Handle clicks
+    function handleMouseClick(e: MouseEvent) {
+      // Create multiple ripples for dramatic effect
+      createRipple(e.clientX, e.clientY, false, 2);
+      setTimeout(() => createRipple(e.clientX - 10, e.clientY + 10, false, 1.5), 50);
+      setTimeout(() => createRipple(e.clientX + 15, e.clientY - 5, false, 1.2), 100);
+      setTimeout(() => createRipple(e.clientX, e.clientY, false, 1.8), 150);
+    }
     
-    // Check for touch devices
+    // Handle window resize
+    function handleResize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    // Check if device supports touch
     const isTouchDevice = 'ontouchstart' in window || 
                         navigator.maxTouchPoints > 0 || 
                         (navigator as any).msMaxTouchPoints > 0;
-
+    
+    // Only add cursor effects on non-touch devices
     if (!isTouchDevice) {
-      // Only add cursor on non-touch devices
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseenter', handleMouseEnter);
       document.addEventListener('mouseleave', handleMouseLeave);
-      document.addEventListener('mousedown', handleMouseClick);
-      document.addEventListener('mouseover', handleElementMouseEnter);
+      document.addEventListener('click', handleMouseClick);
+      document.addEventListener('mouseover', handleElementMouseOver);
+      window.addEventListener('resize', handleResize);
     }
-
-    // Cleanup
+    
+    // Cleanup function
     return () => {
-      if (cursor && document.body.contains(cursor)) {
+      // Remove DOM elements
+      if (document.body.contains(cursor)) {
         document.body.removeChild(cursor);
       }
       
-      if (dot && document.body.contains(dot)) {
-        document.body.removeChild(dot);
+      if (document.body.contains(inverter)) {
+        document.body.removeChild(inverter);
       }
-
+      
+      if (document.body.contains(canvas)) {
+        document.body.removeChild(canvas);
+      }
+      
+      // Remove event listeners
       if (!isTouchDevice) {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseenter', handleMouseEnter);
         document.removeEventListener('mouseleave', handleMouseLeave);
-        document.removeEventListener('mousedown', handleMouseClick);
-        document.removeEventListener('mouseover', handleElementMouseEnter);
+        document.removeEventListener('click', handleMouseClick);
+        document.removeEventListener('mouseover', handleElementMouseOver);
+        window.removeEventListener('resize', handleResize);
       }
     };
   }, []);

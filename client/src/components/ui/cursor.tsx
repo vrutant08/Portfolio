@@ -6,7 +6,7 @@ const CustomCursor = () => {
 
   useEffect(() => {
     const cursor = document.createElement('div');
-    cursor.classList.add('cursor-dot', 'fixed', 'w-6', 'h-6', 'rounded-full', 'bg-accent', 'transform', '-translate-x-1/2', '-translate-y-1/2', 'pointer-events-none', 'z-[1000]');
+    cursor.classList.add('cursor-dot', 'fixed', 'w-6', 'h-6', 'rounded-full', 'bg-primary', 'transform', '-translate-x-1/2', '-translate-y-1/2', 'pointer-events-none', 'z-[1000]');
     cursor.style.opacity = '0';
     cursor.style.transition = 'opacity 0.3s ease';
     document.body.appendChild(cursor);

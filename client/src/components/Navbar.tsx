@@ -51,22 +51,36 @@ const Navbar = () => {
     }
   };
 
+  // Navigation links for both desktop and mobile menus
+  const navLinks = [
+    { href: "#about", label: "About" },
+    { href: "#skills", label: "Skills" },
+    { href: "#education", label: "Education" },
+    { href: "#projects", label: "Projects" },
+    { href: "#experience", label: "Experience" },
+    { href: "#contact", label: "Contact" }
+  ];
+
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-sm shadow-sm' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-background/90 backdrop-blur-sm border-b border-muted' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <a href="#" className="text-xl font-montserrat font-bold flex items-center">
+        <a href="#" className="text-xl font-bold flex items-center">
           <span className="text-primary">VP</span>
-          <span className="text-accent">.</span>
+          <span className="text-foreground">.</span>
         </a>
         <div className="hidden md:flex space-x-8">
-          <a href="#about" className="font-medium hover:text-accent transition-colors">About</a>
-          <a href="#skills" className="font-medium hover:text-accent transition-colors">Skills</a>
-          <a href="#projects" className="font-medium hover:text-accent transition-colors">Projects</a>
-          <a href="#experience" className="font-medium hover:text-accent transition-colors">Experience</a>
-          <a href="#contact" className="font-medium hover:text-accent transition-colors">Contact</a>
+          {navLinks.map((link, index) => (
+            <a 
+              key={index}
+              href={link.href} 
+              className="font-medium text-foreground/80 hover:text-primary transition-colors"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
         <button 
-          className="md:hidden text-2xl" 
+          className="md:hidden text-2xl text-foreground" 
           onClick={toggleMenu}
           aria-label="Toggle navigation menu"
         >
@@ -75,14 +89,19 @@ const Navbar = () => {
       </div>
       <div 
         id="mobileMenu"
-        className="md:hidden bg-white absolute w-full left-0 top-full shadow-md transform -translate-y-full opacity-0 transition-all duration-300"
+        className="md:hidden bg-card absolute w-full left-0 top-full shadow-md transform -translate-y-full opacity-0 transition-all duration-300 border-b border-muted"
       >
         <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-          <a href="#about" className="font-medium hover:text-accent transition-colors py-2" onClick={handleMenuItemClick}>About</a>
-          <a href="#skills" className="font-medium hover:text-accent transition-colors py-2" onClick={handleMenuItemClick}>Skills</a>
-          <a href="#projects" className="font-medium hover:text-accent transition-colors py-2" onClick={handleMenuItemClick}>Projects</a>
-          <a href="#experience" className="font-medium hover:text-accent transition-colors py-2" onClick={handleMenuItemClick}>Experience</a>
-          <a href="#contact" className="font-medium hover:text-accent transition-colors py-2" onClick={handleMenuItemClick}>Contact</a>
+          {navLinks.map((link, index) => (
+            <a 
+              key={index}
+              href={link.href} 
+              className="font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-muted last:border-b-0" 
+              onClick={handleMenuItemClick}
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
       </div>
     </nav>

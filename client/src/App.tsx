@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import { useEffect, useState } from "react";
 import IntroAnimation from "@/components/IntroAnimation";
+import InvertedCursor from "@/components/ui/InvertedCursor";
 
 function Router() {
   return (
@@ -37,6 +38,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        {/* Add our custom cursor with invert effect */}
+        {!showIntro && <InvertedCursor />}
+        
         {showIntro ? (
           <IntroAnimation onComplete={() => setShowIntro(false)} />
         ) : (

@@ -12,8 +12,8 @@ const ProjectsSection = () => {
       title: "BookSphere",
       description: "Online MERN Stack Bookstore Application",
       details: "A full-stack online bookstore platform using the MERN stack with Firebase and JWT for authentication and data storage. Integrated features for user authentication, book catalog browsing, cart management, and secure checkout process.",
-      image: "https://images.unsplash.com/photo-1491933382434-500287f9b54b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      imageAlt: "BookSphere MERN Stack Application",
+      image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      imageAlt: "BookSphere Online Bookstore Application",
       badge: "Full Stack",
       tags: ["React.js", "MongoDB", "Express.js", "Node.js", "Firebase", "JWT"]
     }

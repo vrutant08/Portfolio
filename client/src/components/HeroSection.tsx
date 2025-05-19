@@ -8,6 +8,7 @@ const HeroSection = () => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const roleRef = useRef<HTMLDivElement>(null);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
+  const [typingDirection, setTypingDirection] = useState<'forward' | 'backward'>('forward');
   const [displayedRole, setDisplayedRole] = useState('');
   const isInView = useIntersectionObserver(heroRef, { threshold: 0.1 });
 
@@ -56,49 +57,43 @@ const HeroSection = () => {
     });
   }, []);
 
-  // Role typing animation
+  // Improved role typing animation
   useEffect(() => {
-    if (isInView) {
-      // Start with empty role
-      setDisplayedRole('');
-      
-      // Animate the current role with typewriter effect
-      const currentRole = roles[currentRoleIndex];
-      let currentIndex = 0;
-      let typingInterval: NodeJS.Timeout;
-      
-      const typeCharacter = () => {
-        if (currentIndex < currentRole.length) {
-          setDisplayedRole(prev => prev + currentRole[currentIndex]);
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          
-          // Wait before switching to next role
-          setTimeout(() => {
-            // Create backspace animation
-            const backspaceInterval = setInterval(() => {
-              setDisplayedRole(prev => prev.slice(0, -1));
-              if (displayedRole.length <= 1) {
-                clearInterval(backspaceInterval);
-                
-                // Move to next role after backspacing
-                setTimeout(() => {
-                  setCurrentRoleIndex((prev) => (prev + 1) % roles.length);
-                }, 300);
-              }
-            }, 50);
-          }, 2000);
-        }
-      };
-      
-      typingInterval = setInterval(typeCharacter, 100);
-      
-      return () => {
-        clearInterval(typingInterval);
-      };
+    if (!isInView) return;
+    
+    const currentRole = roles[currentRoleIndex];
+    let typingTimer: NodeJS.Timeout;
+    
+    if (typingDirection === 'forward') {
+      // Type forward
+      const nextChar = currentRole.charAt(displayedRole.length);
+      if (displayedRole.length < currentRole.length) {
+        typingTimer = setTimeout(() => {
+          setDisplayedRole(prev => prev + nextChar);
+        }, 100);
+      } else {
+        // Pause at the end before starting to delete
+        typingTimer = setTimeout(() => {
+          setTypingDirection('backward');
+        }, 2000);
+      }
+    } else {
+      // Type backward (delete)
+      if (displayedRole.length > 0) {
+        typingTimer = setTimeout(() => {
+          setDisplayedRole(prev => prev.substring(0, prev.length - 1));
+        }, 50);
+      } else {
+        // When fully deleted, move to next role and start typing forward again
+        setCurrentRoleIndex(prev => (prev + 1) % roles.length);
+        setTypingDirection('forward');
+      }
     }
-  }, [currentRoleIndex, isInView, roles, displayedRole]);
+    
+    return () => {
+      if (typingTimer) clearTimeout(typingTimer);
+    };
+  }, [displayedRole, currentRoleIndex, isInView, roles, typingDirection]);
 
   return (
     <section
@@ -154,7 +149,7 @@ const HeroSection = () => {
               <img 
                 src="https://images.unsplash.com/photo-1544717305-996b815c338c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                 alt="Professional portrait" 
-                className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+                className="portrait-image w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
               />
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-20">
                 <div className="inline-flex items-center gap-2 bg-primary/20 backdrop-blur-sm text-white py-2 px-4 rounded-full text-sm">

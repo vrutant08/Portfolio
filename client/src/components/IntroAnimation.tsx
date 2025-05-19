@@ -6,30 +6,52 @@ interface IntroAnimationProps {
 }
 
 const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const introTexts = [
-    "Welcome",
-    "to",
-    "Vrutant Panchal's",
-    "Portfolio"
-  ];
+  const fullTextRef = useRef<HTMLDivElement>(null);
+  const [showTypewriter, setShowTypewriter] = useState(false);
+  const [typedText, setTypedText] = useState('');
+  const fullText = "Welcome to Vrutant Panchal's Portfolio";
 
+  // Typewriter effect for the main text
+  useEffect(() => {
+    if (!showTypewriter) return;
+
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex < fullText.length) {
+        setTypedText(fullText.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+        
+        // Keep the text visible longer before fading out
+        setTimeout(() => {
+          if (fullTextRef.current) {
+            gsap.to(fullTextRef.current, {
+              opacity: 0,
+              y: -30,
+              duration: 1,
+              delay: 1, // Extra delay for visibility
+              ease: 'power3.inOut',
+              onComplete: () => {
+                // Begin exit animation after text is complete
+                startExitAnimation();
+              }
+            });
+          }
+        }, 2000); // Stay for 2 seconds before starting exit
+      }
+    }, 80); // Typing speed
+
+    return () => clearInterval(typingInterval);
+  }, [showTypewriter]);
+
+  // Initial animation sequence
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        // Final animation before completing
-        gsap.to('.intro-container', {
-          opacity: 0,
-          duration: 1,
-          ease: 'power3.inOut',
-          onComplete
-        });
-      }
-    });
+    const tl = gsap.timeline();
 
     // Create a more dramatic opening animation
     gsap.set('.intro-content', { opacity: 0 });
@@ -43,58 +65,26 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
       .to('.circle-reveal', { scale: 1, duration: 1.5, ease: 'elastic.out(1, 0.5)' })
       .to('.intro-content', { opacity: 1, duration: 1 })
       .call(() => {
-        // Start the text animation sequence
-        animateNextText();
+        // Start the typewriter animation
+        setShowTypewriter(true);
       });
 
     return () => {
       tl.kill();
     };
-  }, [onComplete]);
+  }, []);
 
-  const animateNextText = () => {
-    if (currentTextIndex >= introTexts.length) {
-      return;
-    }
+  // Function to handle the exit animation
+  const startExitAnimation = () => {
+    const tl = gsap.timeline({
+      onComplete: () => {
+        onComplete(); // Call the parent's onComplete to end the intro
+      }
+    });
 
-    const textElement = document.createElement('div');
-    textElement.className = `text-reveal text-${currentTextIndex} opacity-0 absolute`;
-    textElement.innerHTML = `<span class="text-3xl md:text-7xl font-bold ${currentTextIndex === 2 ? 'text-primary' : 'text-white'}">${introTexts[currentTextIndex]}</span>`;
-    
-    if (textRef.current) {
-      textRef.current.appendChild(textElement);
-
-      // Animate in the current text
-      gsap.fromTo(
-        textElement,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: 'power3.out',
-          onComplete: () => {
-            // After a pause, animate out and show next text
-            setTimeout(() => {
-              gsap.to(textElement, {
-                y: -40,
-                opacity: 0,
-                duration: 0.8,
-                ease: 'power3.in',
-                onComplete: () => {
-                  setCurrentTextIndex(prev => prev + 1);
-                  
-                  // Continue with next text or finish
-                  if (currentTextIndex < introTexts.length - 1) {
-                    animateNextText();
-                  }
-                }
-              });
-            }, 800);
-          }
-        }
-      );
-    }
+    tl.to('.circle-reveal', { scale: 1.2, opacity: 0, duration: 1, ease: 'power3.out' })
+      .to('.left-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "-=0.7")
+      .to('.right-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "<");
   };
 
   return (
@@ -115,7 +105,14 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
           
           {/* Content container */}
           <div className="intro-content w-full h-full flex items-center justify-center">
-            <div ref={textRef} className="text-container relative h-20 flex items-center justify-center"></div>
+            {showTypewriter && (
+              <div ref={fullTextRef} className="px-8 text-center">
+                <h1 className="text-2xl md:text-5xl lg:text-6xl font-bold text-white">
+                  {typedText}
+                  <span className="inline-block w-[3px] h-8 bg-primary ml-1 animate-pulse"></span>
+                </h1>
+              </div>
+            )}
           </div>
         </div>
       </div>

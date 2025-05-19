@@ -4,6 +4,30 @@ interface SceneResult {
   cleanup: () => void;
 }
 
+interface Shape3D {
+  mesh: THREE.Mesh;
+  rotSpeed: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+interface Object3D {
+  mesh: THREE.Mesh;
+  rotationSpeed: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  animation: {
+    amplitude: number;
+    frequency: number;
+    phase: number;
+  };
+  initialY: number;
+}
+
 export function createHeroScene(container: HTMLElement): SceneResult {
   // Basic Three.js setup
   const scene = new THREE.Scene();
@@ -22,39 +46,50 @@ export function createHeroScene(container: HTMLElement): SceneResult {
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
   
-  // Create abstract geometries for the hero section
-  const geometry1 = new THREE.IcosahedronGeometry(1, 0);
-  const geometry2 = new THREE.TorusGeometry(0.7, 0.2, 16, 100);
-  const geometry3 = new THREE.TetrahedronGeometry(0.8, 0);
+  // Create various geometric shapes
+  const geometries = [
+    new THREE.IcosahedronGeometry(0.8, 0),
+    new THREE.TetrahedronGeometry(0.8, 0),
+    new THREE.OctahedronGeometry(0.7, 0),
+    new THREE.DodecahedronGeometry(0.7, 0),
+    new THREE.ConeGeometry(0.5, 1, 4),
+  ];
   
-  // Create materials
-  const material1 = new THREE.MeshBasicMaterial({ 
-    color: 0x0066CC, 
-    wireframe: true 
-  });
-  const material2 = new THREE.MeshBasicMaterial({ 
-    color: 0xFFFFFF, 
-    wireframe: true 
-  });
-  const material3 = new THREE.MeshBasicMaterial({ 
-    color: 0x444444, 
-    wireframe: true 
-  });
+  // Create materials with white wireframe for all shapes
+  const materials = [
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true })
+  ];
   
-  // Create meshes
-  const shape1 = new THREE.Mesh(geometry1, material1);
-  const shape2 = new THREE.Mesh(geometry2, material2);
-  const shape3 = new THREE.Mesh(geometry3, material3);
+  const shapes: Shape3D[] = [];
   
-  // Position the shapes
-  shape1.position.set(-2, 0, 0);
-  shape2.position.set(0, 0, -2);
-  shape3.position.set(2, 0, 0);
-  
-  // Add to scene
-  scene.add(shape1);
-  scene.add(shape2);
-  scene.add(shape3);
+  // Create and position shapes randomly
+  for (let i = 0; i < geometries.length; i++) {
+    const shape = new THREE.Mesh(geometries[i], materials[i]);
+    
+    // Random position within a certain area
+    shape.position.x = (Math.random() - 0.5) * 8;
+    shape.position.y = (Math.random() - 0.5) * 6;
+    shape.position.z = (Math.random() - 0.5) * 4 - 2; // Slightly negative to keep in front of camera
+    
+    // Random rotation
+    shape.rotation.x = Math.random() * Math.PI;
+    shape.rotation.y = Math.random() * Math.PI;
+    shape.rotation.z = Math.random() * Math.PI;
+    
+    // Random rotation speeds
+    const rotSpeed = {
+      x: (Math.random() - 0.5) * 0.01,
+      y: (Math.random() - 0.5) * 0.01,
+      z: (Math.random() - 0.5) * 0.01
+    };
+    
+    shapes.push({ mesh: shape, rotSpeed });
+    scene.add(shape);
+  }
   
   // Position camera
   camera.position.z = 5;
@@ -87,24 +122,22 @@ export function createHeroScene(container: HTMLElement): SceneResult {
   const animate = () => {
     const animationId = requestAnimationFrame(animate);
     
-    // Rotate shapes based on time
-    shape1.rotation.x += 0.003;
-    shape1.rotation.y += 0.005;
+    // Rotate and animate shapes
+    shapes.forEach((shape, index) => {
+      // Continuous rotation
+      shape.mesh.rotation.x += shape.rotSpeed.x;
+      shape.mesh.rotation.y += shape.rotSpeed.y;
+      shape.mesh.rotation.z += shape.rotSpeed.z;
+      
+      // Subtle floating movement
+      const time = Date.now() * 0.0005;
+      shape.mesh.position.y += Math.sin(time + index) * 0.003;
+    });
     
-    shape2.rotation.x += 0.005;
-    shape2.rotation.y += 0.003;
-    
-    shape3.rotation.x += 0.004;
-    shape3.rotation.y += 0.002;
-    
-    // Subtle movement based on mouse position
-    shape1.position.x = -2 + mouseX * 0.3;
-    shape1.position.y = mouseY * 0.3;
-    
-    shape2.position.y = mouseY * 0.2;
-    
-    shape3.position.x = 2 + mouseX * 0.3;
-    shape3.position.y = mouseY * 0.3;
+    // Subtle camera movement based on mouse
+    camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.02;
+    camera.position.y += (mouseY * 1.5 - camera.position.y) * 0.02;
+    camera.lookAt(scene.position);
     
     renderer.render(scene, camera);
     
@@ -127,9 +160,10 @@ export function createHeroScene(container: HTMLElement): SceneResult {
       container.removeChild(renderer.domElement);
     }
     
-    // Dispose of geometries and materials
-    [geometry1, geometry2, geometry3].forEach(geometry => geometry.dispose());
-    [material1, material2, material3].forEach(material => material.dispose());
+    // Dispose of resources
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => material.dispose());
+    shapes.forEach(shape => scene.remove(shape.mesh));
     
     // Clear the scene
     scene.clear();
@@ -156,49 +190,66 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
   
-  // Create skill spheres with labels
-  const spheres = [];
-  const textLabels = ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'Python', 'Excel', 'Design'];
+  // Create different geometric shapes
+  const objects: Object3D[] = [];
+  const shapeConfigs = [
+    // Code symbols (brackets, slashes, dots)
+    { geometry: new THREE.BoxGeometry(0.6, 0.8, 0.1), position: { x: -2.5, y: 1.5, z: 0 }, color: 0xFFFFFF },
+    { geometry: new THREE.BoxGeometry(0.3, 0.9, 0.1), position: { x: 2.2, y: -1.2, z: -1 }, color: 0xFFFFFF },
+    { geometry: new THREE.CylinderGeometry(0.1, 0.1, 1, 6), position: { x: -1.8, y: -1.5, z: -2 }, color: 0xFFFFFF },
+    { geometry: new THREE.TetrahedronGeometry(0.5, 0), position: { x: 1.2, y: 1.8, z: -3 }, color: 0xFFFFFF },
+    { geometry: new THREE.IcosahedronGeometry(0.4, 0), position: { x: 3, y: 0.5, z: -2.5 }, color: 0xFFFFFF },
+    { geometry: new THREE.OctahedronGeometry(0.4, 0), position: { x: -3, y: 0, z: -1.5 }, color: 0xFFFFFF },
+    { geometry: new THREE.DodecahedronGeometry(0.35, 0), position: { x: 0, y: -2, z: -1 }, color: 0xFFFFFF },
+    { geometry: new THREE.RingGeometry(0.3, 0.5, 8), position: { x: -1, y: 2, z: -2 }, color: 0xFFFFFF },
+  ];
   
-  textLabels.forEach((label, index) => {
-    const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+  // Create objects with random rotations and animations
+  shapeConfigs.forEach(shape => {
     const material = new THREE.MeshBasicMaterial({ 
-      color: index % 2 === 0 ? 0x0066CC : 0x333333,
+      color: shape.color,
+      wireframe: true,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.8
     });
     
-    const sphere = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(shape.geometry, material);
+    mesh.position.set(shape.position.x, shape.position.y, shape.position.z);
     
-    // Distribute spheres in a circle
-    const angle = (index / textLabels.length) * Math.PI * 2;
-    const radius = 3;
-    sphere.position.x = Math.cos(angle) * radius;
-    sphere.position.z = Math.sin(angle) * radius;
+    // Random initial rotation
+    mesh.rotation.x = Math.random() * Math.PI * 2;
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+    mesh.rotation.z = Math.random() * Math.PI * 2;
     
-    scene.add(sphere);
-    spheres.push({
-      mesh: sphere,
-      label,
-      baseX: sphere.position.x,
-      baseZ: sphere.position.z,
-      amplitude: 0.1 + Math.random() * 0.1
+    // Store rotation speeds
+    const rotationSpeed = {
+      x: (Math.random() - 0.5) * 0.01,
+      y: (Math.random() - 0.5) * 0.01,
+      z: (Math.random() - 0.5) * 0.01
+    };
+    
+    // Store animation settings
+    const animation = {
+      amplitude: 0.05 + Math.random() * 0.1,
+      frequency: 0.5 + Math.random() * 1.5,
+      phase: Math.random() * Math.PI * 2
+    };
+    
+    // Add to scene and objects array
+    scene.add(mesh);
+    objects.push({
+      mesh,
+      rotationSpeed,
+      animation,
+      initialY: mesh.position.y
     });
   });
   
-  camera.position.z = 7;
+  // Position camera
+  camera.position.z = 6;
   
-  // Track mouse position
-  let mouseX = 0;
-  let mouseY = 0;
-  
-  const handleMouseMove = (event: MouseEvent) => {
-    const rect = container.getBoundingClientRect();
-    mouseX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouseY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  };
-  
-  container.addEventListener('mousemove', handleMouseMove);
+  // Add subtle camera movement
+  let cameraMovementPhase = 0;
   
   // Handle container resize
   const handleResize = () => {
@@ -215,34 +266,25 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
   // Animation loop
   const animate = () => {
     const animationId = requestAnimationFrame(animate);
+    const time = Date.now() * 0.001;
     
-    // Animate spheres
-    spheres.forEach((sphere: any, index: number) => {
-      const time = Date.now() * 0.001;
-      const mesh = sphere.mesh;
-      
-      // Base rotation
-      mesh.rotation.x += 0.002;
-      mesh.rotation.y += 0.003;
+    // Subtle camera movement in a circular pattern
+    cameraMovementPhase += 0.003;
+    camera.position.x = Math.sin(cameraMovementPhase) * 0.5;
+    camera.position.y = Math.cos(cameraMovementPhase) * 0.3;
+    camera.lookAt(scene.position);
+    
+    // Animate each object
+    objects.forEach((obj, index) => {
+      // Rotation
+      obj.mesh.rotation.x += obj.rotationSpeed.x;
+      obj.mesh.rotation.y += obj.rotationSpeed.y;
+      obj.mesh.rotation.z += obj.rotationSpeed.z;
       
       // Floating movement
-      mesh.position.y = Math.sin(time + index) * sphere.amplitude;
-      
-      // Mouse interaction
-      mesh.position.x = sphere.baseX + mouseX * 0.5;
-      mesh.position.z = sphere.baseZ + mouseY * 0.5;
-      
-      // Scale effect on hover
-      const distance = Math.sqrt(
-        Math.pow(mesh.position.x - mouseX * 3, 2) + 
-        Math.pow(mesh.position.y - mouseY * 3, 2)
-      );
-      
-      if (distance < 1) {
-        mesh.scale.set(1.2, 1.2, 1.2);
-      } else {
-        mesh.scale.set(1, 1, 1);
-      }
+      obj.mesh.position.y = obj.initialY + 
+        Math.sin(time * obj.animation.frequency + obj.animation.phase) * 
+        obj.animation.amplitude;
     });
     
     renderer.render(scene, camera);
@@ -259,7 +301,6 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
       cancelAnimationFrame((animate as any).id);
     }
     
-    container.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('resize', handleResize);
     
     if (container.contains(renderer.domElement)) {
@@ -267,10 +308,10 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
     }
     
     // Dispose of resources
-    spheres.forEach((sphere: any) => {
-      scene.remove(sphere.mesh);
-      sphere.mesh.geometry.dispose();
-      sphere.mesh.material.dispose();
+    objects.forEach(obj => {
+      scene.remove(obj.mesh);
+      obj.mesh.geometry.dispose();
+      obj.mesh.material.dispose();
     });
     
     // Clear the scene

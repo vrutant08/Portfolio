@@ -29,7 +29,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-gray-300;
   }
   
   html {
@@ -37,7 +37,71 @@
   }
   
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    @apply overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .project-card {
+    background-color: hsl(var(--card));
+    @apply border border-gray-300 transition-all duration-300;
+  }
+  
+  .project-card:hover {
+    transform: translateY(-5px);
+    @apply border-opacity-50 border-[hsl(var(--primary))] shadow-lg;
+  }
+  
+  .skill-tag {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+    @apply py-2 px-4 rounded-md font-medium inline-block;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .skill-tag:hover {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    transform: translateY(-3px);
+  }
+
+  .skill-category {
+    color: hsl(var(--primary));
+    @apply font-semibold text-lg mb-4 border-b pb-2;
+    border-bottom-color: hsl(var(--primary) / 0.3);
+  }
+
+  .typewriter-cursor {
+    @apply border-r-2 animate-blink;
+    border-color: hsl(var(--primary));
+  }
+
+  .split-screen {
+    position: fixed;
+    width: 50vw;
+    height: 100vh;
+    background-color: hsl(var(--primary));
+    z-index: 100;
+    transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+  }
+
+  .section-heading {
+    @apply text-3xl md:text-4xl font-bold relative;
+    display: inline-block;
+  }
+
+  .section-heading::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background-color: hsl(var(--primary));
   }
 }
 
@@ -66,86 +130,7 @@
   animation: blink 0.75s step-end infinite;
 }
 
-/* Custom components */
-.section-transition {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-.section-transition.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.cursor-dot {
-  mix-blend-mode: difference;
-  pointer-events: none;
-}
-
-.skill-tag {
-  @apply bg-muted text-foreground py-2 px-4 rounded-md font-medium inline-block;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.skill-tag:hover {
-  @apply bg-primary text-primary-foreground;
-  transform: translateY(-3px);
-}
-
-.skill-category {
-  @apply text-primary font-semibold text-lg mb-4 border-b border-primary/30 pb-2;
-}
-
-.typewriter-cursor {
-  @apply border-r-2 border-primary animate-blink;
-}
-
-.split-screen {
-  position: fixed;
-  width: 50vw;
-  height: 100vh;
-  @apply bg-primary;
-  z-index: 100;
-  transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
-}
-
-.left-panel {
-  left: 0;
-  transform: translateX(-100%);
-}
-
-.right-panel {
-  right: 0;
-  transform: translateX(100%);
-}
-
-.project-card {
-  @apply bg-card border border-border transition-all duration-300;
-}
-
-.project-card:hover {
-  transform: translateY(-5px);
-  @apply border-primary/50 shadow-lg shadow-primary/10;
-}
-
-.section-heading {
-  @apply text-3xl md:text-4xl font-bold relative;
-  display: inline-block;
-}
-
-.section-heading::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 60px;
-  height: 3px;
-  @apply bg-primary;
-}
-
+/* Rest of your existing animations and styles... */
 @keyframes ripple {
   0% {
     transform: scale(0);

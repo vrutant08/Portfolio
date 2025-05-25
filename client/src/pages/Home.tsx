@@ -1,15 +1,15 @@
 import { useRef, useEffect } from "react";
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
-import AboutSection from "@/components/AboutSection";
-import SkillsSection from "@/components/SkillsSection";
-import EducationSection from "@/components/EducationSection";
-import ProjectsSection from "@/components/ProjectsSection";
-import ExperienceSection from "@/components/ExperienceSection";
-import ContactSection from "@/components/ContactSection";
-import Footer from "@/components/Footer";
+import Navbar from "../components/Navbar";
+import HeroSection from "../components/HeroSection";
+import AboutSection from "../components/AboutSection";
+import SkillsSection from "../components/SkillsSection";
+import EducationSection from "../components/EducationSection";
+import ProjectsSection from "../components/ProjectsSection";
+import ExperienceSection from "../components/ExperienceSection";
+import ContactSection from "../components/ContactSection";
+import Footer from "../components/Footer";
 import { gsap } from "gsap";
-import CustomCursor from "@/components/ui/cursor";
+import CustomCursor from "../components/ui/cursor";
 
 const Home = () => {
   const homeRef = useRef<HTMLDivElement>(null);

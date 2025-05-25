@@ -1,0 +1,15 @@
+{
+  "name": "portfolio-backend",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx index.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}

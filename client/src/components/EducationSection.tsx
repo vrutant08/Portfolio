@@ -1,11 +1,91 @@
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
+import { useRef, useEffect, useState } from "react";
 import useIntersectionObserver from "@/hooks/use-intersection-observer";
 
 const EducationSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
   const isInView = useIntersectionObserver(sectionRef, { threshold: 0.1 });
+  const [gsapLoaded, setGsapLoaded] = useState(false);
+
+  // Load GSAP
+  useEffect(() => {
+    import('gsap').then(({ gsap }) => {
+      setGsapLoaded(true);
+    });
+  }, []);
+
+  // Animate timeline when in view
+  useEffect(() => {
+    if (!isInView || !timelineRef.current || !gsapLoaded) return;
+
+    import('gsap').then(({ gsap }) => {
+      // Vertical timeline line animation
+      gsap.fromTo(
+        '.timeline-line',
+        { height: 0 },
+        { height: '100%', duration: 1.5, ease: 'power3.inOut' }
+      );
+      
+      // Animate timeline nodes and content with stagger
+      gsap.fromTo(
+        '.timeline-node',
+        { scale: 0, opacity: 0 },
+        { 
+          scale: 1, 
+          opacity: 1, 
+          duration: 0.5, 
+          stagger: 0.4,
+          ease: 'back.out(1.7)',
+          delay: 0.2
+        }
+      );
+      
+      // Animate content blocks with stagger
+      gsap.fromTo(
+        '.timeline-content',
+        { x: -30, opacity: 0 },
+        { 
+          x: 0, 
+          opacity: 1, 
+          duration: 0.7, 
+          stagger: 0.4,
+          ease: 'power3.out',
+          delay: 0.4
+        }
+      );
+    });
+  }, [isInView, gsapLoaded]);
+
+  // Animate certification cards when in view
+  useEffect(() => {
+    if (isInView) {
+      gsap.fromTo(
+        '.cert-card',
+        { y: 30, opacity: 0 },
+        { 
+          y: 0, 
+          opacity: 1, 
+          duration: 0.7, 
+          stagger: 0.2,
+          ease: 'power3.out',
+          delay: 0.8
+        }
+      );
+      
+      // Music highlight animation
+      gsap.fromTo(
+        '.music-highlight',
+        { y: 20, opacity: 0 },
+        { 
+          y: 0, 
+          opacity: 1, 
+          duration: 0.7,
+          ease: 'power3.out',
+          delay: 1.4
+        }
+      );
+    }
+  }, [isInView]);
 
   const education = [
     {
@@ -44,77 +124,6 @@ const EducationSection = () => {
       icon: "ri-music-line"
     }
   ];
-
-  // Animate timeline when in view
-  useEffect(() => {
-    if (isInView && timelineRef.current) {
-      // Animate timeline line growing
-      gsap.fromTo(
-        '.timeline-line',
-        { height: 0 },
-        { height: '100%', duration: 1.5, ease: 'power3.inOut' }
-      );
-      
-      // Animate timeline nodes and content with stagger
-      gsap.fromTo(
-        '.timeline-node',
-        { scale: 0, opacity: 0 },
-        { 
-          scale: 1, 
-          opacity: 1, 
-          duration: 0.5, 
-          stagger: 0.4,
-          ease: 'back.out(1.7)',
-          delay: 0.2
-        }
-      );
-      
-      // Animate content blocks with stagger
-      gsap.fromTo(
-        '.timeline-content',
-        { x: -30, opacity: 0 },
-        { 
-          x: 0, 
-          opacity: 1, 
-          duration: 0.7, 
-          stagger: 0.4,
-          ease: 'power3.out',
-          delay: 0.4
-        }
-      );
-    }
-  }, [isInView]);
-
-  // Animate certification cards when in view
-  useEffect(() => {
-    if (isInView) {
-      gsap.fromTo(
-        '.cert-card',
-        { y: 30, opacity: 0 },
-        { 
-          y: 0, 
-          opacity: 1, 
-          duration: 0.7, 
-          stagger: 0.2,
-          ease: 'power3.out',
-          delay: 0.8
-        }
-      );
-      
-      // Music highlight animation
-      gsap.fromTo(
-        '.music-highlight',
-        { y: 20, opacity: 0 },
-        { 
-          y: 0, 
-          opacity: 1, 
-          duration: 0.7,
-          ease: 'power3.out',
-          delay: 1.4
-        }
-      );
-    }
-  }, [isInView]);
 
   return (
     <section ref={sectionRef} className="py-20 bg-secondary relative overflow-hidden" id="education">

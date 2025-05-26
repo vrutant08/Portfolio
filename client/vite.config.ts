@@ -13,6 +13,10 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "src"),
     },
+    dedupe: ['gsap']
+  },
+  optimizeDeps: {
+    include: ['gsap']
   },
   root: path.resolve(__dirname),
   base: "/",
@@ -20,5 +24,12 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "../dist/public"),
     emptyOutDir: true,
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'gsap': ['gsap']
+        }
+      }
+    }
   },
 });

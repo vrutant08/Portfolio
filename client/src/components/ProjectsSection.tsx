@@ -1,11 +1,18 @@
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
+import { useRef, useEffect, useState } from "react";
 import useIntersectionObserver from "@/hooks/use-intersection-observer";
 
 const ProjectsSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const projectRef = useRef<HTMLDivElement>(null);
   const isInView = useIntersectionObserver(sectionRef, { threshold: 0.1 });
+  const [gsapLoaded, setGsapLoaded] = useState(false);
+
+  // Load GSAP
+  useEffect(() => {
+    import('gsap').then(({ gsap }) => {
+      setGsapLoaded(true);
+    });
+  }, []);
 
   const projects = [
     {
@@ -21,7 +28,9 @@ const ProjectsSection = () => {
 
   // Animate project card when in view
   useEffect(() => {
-    if (isInView && projectRef.current) {
+    if (!isInView || !projectRef.current || !gsapLoaded) return;
+
+    import('gsap').then(({ gsap }) => {
       // Staggered animation for project elements
       const tl = gsap.timeline();
       
@@ -112,8 +121,8 @@ const ProjectsSection = () => {
           delay: 1
         }
       );
-    }
-  }, [isInView]);
+    });
+  }, [isInView, gsapLoaded]);
 
   return (
     <section ref={sectionRef} className="py-20 bg-background relative overflow-hidden" id="projects">

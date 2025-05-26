@@ -1,17 +1,29 @@
 import { useEffect, useState, useRef } from 'react';
-import { gsap } from 'gsap';
+import type { FC } from 'react';
 
 interface IntroAnimationProps {
   onComplete: () => void;
 }
 
-const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
+const IntroAnimation: FC<IntroAnimationProps> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const fullTextRef = useRef<HTMLDivElement>(null);
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [typedText, setTypedText] = useState('');
+  const [gsapLoaded, setGsapLoaded] = useState(false);
   const fullText = "Welcome to Vrutant Panchal's Portfolio";
+  
+  // Load GSAP dynamically
+  useEffect(() => {
+    Promise.all([
+      import('gsap'),
+      import('gsap/ScrollTrigger')
+    ]).then(([{ gsap }, { ScrollTrigger }]) => {
+      gsap.registerPlugin(ScrollTrigger);
+      setGsapLoaded(true);
+    });
+  }, []);
 
   // Typewriter effect for the main text
   useEffect(() => {
@@ -24,20 +36,21 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
         currentIndex++;
       } else {
         clearInterval(typingInterval);
-        
-        // Keep the text visible longer before fading out
+          // Keep the text visible longer before fading out
         setTimeout(() => {
-          if (fullTextRef.current) {
-            gsap.to(fullTextRef.current, {
-              opacity: 0,
-              y: -30,
-              duration: 1,
-              delay: 1, // Extra delay for visibility
-              ease: 'power3.inOut',
-              onComplete: () => {
-                // Begin exit animation after text is complete
-                startExitAnimation();
-              }
+          if (fullTextRef.current && gsapLoaded) {
+            import('gsap').then(({ gsap }) => {
+              gsap.to(fullTextRef.current, {
+                opacity: 0,
+                y: -30,
+                duration: 1,
+                delay: 1, // Extra delay for visibility
+                ease: 'power3.inOut',
+                onComplete: () => {
+                  // Begin exit animation after text is complete
+                  startExitAnimation();
+                }
+              });
             });
           }
         }, 2000); // Stay for 2 seconds before starting exit
@@ -46,45 +59,49 @@ const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
 
     return () => clearInterval(typingInterval);
   }, [showTypewriter]);
-
   // Initial animation sequence
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !gsapLoaded) return;
 
-    const tl = gsap.timeline();
+    import('gsap').then(({ gsap }) => {
+      const tl = gsap.timeline();
 
-    // Create a more dramatic opening animation
-    gsap.set('.intro-content', { opacity: 0 });
-    gsap.set('.left-split', { scaleX: 0, transformOrigin: 'left' });
-    gsap.set('.right-split', { scaleX: 0, transformOrigin: 'right' });
-    gsap.set('.circle-reveal', { scale: 0 });
+      // Create a more dramatic opening animation
+      gsap.set('.intro-content', { opacity: 0 });
+      gsap.set('.left-split', { scaleX: 0, transformOrigin: 'left' });
+      gsap.set('.right-split', { scaleX: 0, transformOrigin: 'right' });
+      gsap.set('.circle-reveal', { scale: 0 });
 
-    // Start animation sequence
-    tl.to('.left-split', { scaleX: 1, duration: 1.2, ease: 'power3.inOut' })
-      .to('.right-split', { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, "<")
-      .to('.circle-reveal', { scale: 1, duration: 1.5, ease: 'elastic.out(1, 0.5)' })
-      .to('.intro-content', { opacity: 1, duration: 1 })
-      .call(() => {
-        // Start the typewriter animation
-        setShowTypewriter(true);
-      });
+      // Start animation sequence
+      tl.to('.left-split', { scaleX: 1, duration: 1.2, ease: 'power3.inOut' })
+        .to('.right-split', { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, "<")
+        .to('.circle-reveal', { scale: 1, duration: 1.5, ease: 'elastic.out(1, 0.5)' })
+        .to('.intro-content', { opacity: 1, duration: 1 })
+        .call(() => {
+          // Start the typewriter animation
+          setShowTypewriter(true);
+        });
 
-    return () => {
-      tl.kill();
-    };
+      return () => {
+        tl.kill();
+      };
+    });
   }, []);
-
   // Function to handle the exit animation
   const startExitAnimation = () => {
-    const tl = gsap.timeline({
-      onComplete: () => {
-        onComplete(); // Call the parent's onComplete to end the intro
-      }
-    });
+    if (!gsapLoaded) return;
+    
+    import('gsap').then(({ gsap }) => {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          onComplete(); // Call the parent's onComplete to end the intro
+        }
+      });
 
-    tl.to('.circle-reveal', { scale: 1.2, opacity: 0, duration: 1, ease: 'power3.out' })
-      .to('.left-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "-=0.7")
-      .to('.right-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "<");
+      tl.to('.circle-reveal', { scale: 1.2, opacity: 0, duration: 1, ease: 'power3.out' })
+        .to('.left-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "-=0.7")
+        .to('.right-split', { scaleX: 0, duration: 1, ease: 'power3.in' }, "<");
+    });
   };
 
   return (

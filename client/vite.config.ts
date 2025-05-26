@@ -8,26 +8,25 @@ export default defineConfig({
       jsxRuntime: 'automatic',
       jsxImportSource: 'react',
     })
-  ],
-  resolve: {
+  ],  resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
     },
-    dedupe: ['gsap']
+    dedupe: ['gsap', 'wouter', 'react', 'react-dom']
   },
   optimizeDeps: {
-    include: ['gsap']
+    include: ['gsap', 'wouter']
   },
   root: path.resolve(__dirname),
   base: "/",
   build: {
     outDir: path.resolve(__dirname, "../dist/public"),
     emptyOutDir: true,
-    sourcemap: true,
-    rollupOptions: {
+    sourcemap: true,    rollupOptions: {
       output: {
         manualChunks: {
-          'gsap': ['gsap']
+          'gsap': ['gsap'],
+          'vendor': ['wouter', 'react', 'react-dom']
         }
       }
     }

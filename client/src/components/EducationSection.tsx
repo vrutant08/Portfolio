@@ -6,21 +6,18 @@ const EducationSection = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const isInView = useIntersectionObserver(sectionRef, { threshold: 0.1 });
   const [gsapLoaded, setGsapLoaded] = useState(false);
-
   // Load GSAP
   useEffect(() => {
-    import('gsap').then(({ gsap }) => {
+    import('gsap').then(() => {
       setGsapLoaded(true);
     });
   }, []);
 
   // Animate timeline when in view
   useEffect(() => {
-    if (!isInView || !timelineRef.current || !gsapLoaded) return;
-
-    import('gsap').then(({ gsap }) => {
+    if (!isInView || !timelineRef.current || !gsapLoaded) return;    import('gsap').then((gsapModule) => {
       // Vertical timeline line animation
-      gsap.fromTo(
+      gsapModule.gsap.fromTo(
         '.timeline-line',
         { height: 0 },
         { height: '100%', duration: 1.5, ease: 'power3.inOut' }

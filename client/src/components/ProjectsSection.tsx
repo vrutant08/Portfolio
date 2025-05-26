@@ -6,10 +6,9 @@ const ProjectsSection = () => {
   const projectRef = useRef<HTMLDivElement>(null);
   const isInView = useIntersectionObserver(sectionRef, { threshold: 0.1 });
   const [gsapLoaded, setGsapLoaded] = useState(false);
-
   // Load GSAP
   useEffect(() => {
-    import('gsap').then(({ gsap }) => {
+    import('gsap').then(() => {
       setGsapLoaded(true);
     });
   }, []);
@@ -28,11 +27,9 @@ const ProjectsSection = () => {
 
   // Animate project card when in view
   useEffect(() => {
-    if (!isInView || !projectRef.current || !gsapLoaded) return;
-
-    import('gsap').then(({ gsap }) => {
+    if (!isInView || !projectRef.current || !gsapLoaded) return;    import('gsap').then((gsapModule) => {
       // Staggered animation for project elements
-      const tl = gsap.timeline();
+      const tl = gsapModule.gsap.timeline();
       
       // Project image reveal
       tl.fromTo(

@@ -7,7 +7,7 @@ interface IntroAnimationProps {
 
 const IntroAnimation: FC<IntroAnimationProps> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
+  // Remove unused ref
   const fullTextRef = useRef<HTMLDivElement>(null);
   const [showTypewriter, setShowTypewriter] = useState(false);
   const [typedText, setTypedText] = useState('');

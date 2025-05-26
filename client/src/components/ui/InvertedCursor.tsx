@@ -46,12 +46,10 @@ const InvertedCursor = () => {
     // Draw trail function
     function drawTrail() {
       if (!ctx) return;
-      
-      // Clear the canvas
+        // Clear the canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Decay trail points over time
-      const currentTime = Date.now();
       trailPointsRef.current = trailPointsRef.current
         .map(point => ({ ...point, age: point.age + 16 }))
         .filter(point => point.age < 1000); // Remove points older than 1 second

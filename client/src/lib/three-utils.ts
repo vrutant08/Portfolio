@@ -5,7 +5,7 @@ interface SceneResult {
 }
 
 interface Shape3D {
-  mesh: THREE.Mesh;
+  mesh: any; // fallback to any due to type issues
   rotSpeed: {
     x: number;
     y: number;
@@ -13,8 +13,8 @@ interface Shape3D {
   };
 }
 
-interface Object3D {
-  mesh: THREE.Mesh;
+interface CustomShape3D {
+  mesh: any; // fallback to any due to type issues
   rotationSpeed: {
     x: number;
     y: number;
@@ -191,7 +191,7 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
   container.appendChild(renderer.domElement);
   
   // Create different geometric shapes
-  const objects: Object3D[] = [];
+  const objects: CustomShape3D[] = [];
   const shapeConfigs = [
     // Code symbols (brackets, slashes, dots)
     { geometry: new THREE.BoxGeometry(0.6, 0.8, 0.1), position: { x: -2.5, y: 1.5, z: 0 }, color: 0xFFFFFF },
@@ -275,7 +275,7 @@ export function createSkillsScene(container: HTMLElement): SceneResult {
     camera.lookAt(scene.position);
     
     // Animate each object
-    objects.forEach((obj, index) => {
+    objects.forEach((obj) => {
       // Rotation
       obj.mesh.rotation.x += obj.rotationSpeed.x;
       obj.mesh.rotation.y += obj.rotationSpeed.y;

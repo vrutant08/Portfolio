@@ -62,7 +62,7 @@ const HeroSection = () => {
     if (!isInView) return;
     
     const currentRole = roles[currentRoleIndex];
-    let typingTimer: NodeJS.Timeout;
+    let typingTimer: ReturnType<typeof setTimeout>;
     
     if (typingDirection === 'forward') {
       // Type forward

@@ -1,20 +1,25 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "..",
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@shared/*": ["../shared/*"]
+    },
     "lib": ["ES2020"],
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
-  "include": ["./**/*.ts"],
+  "include": ["./**/*.ts", "../shared/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

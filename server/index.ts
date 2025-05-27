@@ -1,30 +1,23 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from 'cors';
-import { registerRoutes } from "./routes";
+import { config } from 'dotenv';
+import { registerRoutes } from "./routes.js";
+
+// Load environment variables
+config();
 
 const app = express();
 const log = (message: string) => console.log(`[Server] ${message}`);
 
 // CORS configuration
-app.use((req, res, next) => {
-  // Allow requests from your Vercel frontend domain
-  const allowedOrigins = ['https://your-frontend-domain.vercel.app'];
-  const origin = req.headers.origin;
-  
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
-});
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.CLIENT_URL || 'https://your-frontend-domain.vercel.app']
+    : 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

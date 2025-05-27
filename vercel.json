@@ -1,40 +1,39 @@
 {
   "version": 2,
+  "buildCommand": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+  "outputDirectory": "client/dist",
   "builds": [
     {
-      "src": "client/package.json",
-      "use": "@vercel/static",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "cd client && npm install --production=false && npm run build"
-      }
+      "src": "client/dist/**/*",
+      "use": "@vercel/static"
     },
     {
-      "src": "server/index.ts",
+      "src": "server/dist/index.js",
       "use": "@vercel/node",
       "config": {
-        "buildCommand": "cd server && npm install --production=false && npm run build",
-        "includeFiles": ["server/**", "shared/**"]
+        "includeFiles": ["server/dist/**", "shared/**"]
       }
     }
-  ],  "routes": [
+  ],
+  "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index.ts"
+      "dest": "/server/dist/index.js"
     },
     {
       "src": "/assets/(.*)",
-      "dest": "client/dist/assets/$1"
+      "dest": "/assets/$1"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "client/dist/index.html"
+      "dest": "/index.html"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "CLIENT_URL": "https://portfolio-d7evy3u6x-vrutants-projects-4e165f5a.vercel.app"
   }
 }

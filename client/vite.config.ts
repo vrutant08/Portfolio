@@ -17,14 +17,23 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
   build: {
-    outDir: path.resolve(__dirname, "../dist/public"),
+    outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: true
       }
     },
